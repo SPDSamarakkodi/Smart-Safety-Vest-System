@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "124855601708",
+    "firebase_url": "https://cw-project-4212c-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "cw-project-4212c",
+    "storage_bucket": "cw-project-4212c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:124855601708:android:8d3a55f5e6abe3e6a0df89",
+        "android_client_info": {
+          "package_name": "com.example.safety_vest_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKIXgRP1zfm5qzGR1oS4X36gwp9P0URlA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

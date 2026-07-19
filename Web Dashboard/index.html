@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Safety Vest - Pro Dashboard</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <!-- Chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: linear-gradient(135deg,#0f172a,#1e293b);
+      --card: rgba(255,255,255,0.06);
+      --text: white;
+      --accent: #3b82f6;
+    }
+
+    body.light {
+      --bg: linear-gradient(135deg,#e2e8f0,#f8fafc);
+      --card: rgba(0,0,0,0.06);
+      --text: #0f172a;
+      --accent: #2563eb;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    header {
+      display:flex;
+      justify-content:space-between;
+      padding:15px;
+      background:var(--card);
+      backdrop-filter:blur(10px);
+    }
+
+    button {
+      padding:8px 12px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      background:var(--accent);
+      color:white;
+    }
+
+    /* MAIN */
+    .main {
+      padding:20px;
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+    }
+
+    /* CARDS */
+    .cards {
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:15px;
+    }
+
+    .card {
+      padding:15px;
+      background:var(--card);
+      border-radius:12px;
+      cursor:pointer;
+      transition:0.3s;
+    }
+
+    .card:hover {
+      transform:translateY(-5px);
+      background:rgba(59,130,246,0.2);
+    }
+
+    .value { font-size:22px; font-weight:bold; }
+
+    /* CHART */
+    .chart-box {
+      background:var(--card);
+      border-radius:12px;
+      padding:10px;
+      height:450px;
+    }
+
+    canvas {
+      height:100% !important;
+    }
+
+    /* MAP */
+    .map-box {
+      height:350px;
+      background:var(--card);
+      border-radius:12px;
+    }
+
+    iframe {
+      width:100%;
+      height:100%;
+      border:none;
+      border-radius:12px;
+    }
+
+    /* LOGIN MODERN */
+    .login {
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,0.6);
+      backdrop-filter:blur(10px);
+    }
+
+    .login-box {
+      width:320px;
+      padding:25px;
+      border-radius:16px;
+      background:rgba(255,255,255,0.08);
+      backdrop-filter:blur(20px);
+      color:white;
+      box-shadow:0 0 20px rgba(0,0,0,0.4);
+    }
+
+    .login-box input {
+      width:100%;
+      padding:10px;
+      margin:8px 0;
+      border:none;
+      border-radius:8px;
+      outline:none;
+    }
+
+    .login-box button {
+      width:100%;
+      margin-top:10px;
+    }
+
+    .hidden { display:none; }
+  </style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="loginBox">
+  <div class="login-box">
+    <h2>🔐 Admin Login</h2>
+    <input id="user" placeholder="Username">
+    <input id="pass" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+</div>
+
+<header>
+  <div>🦺 Smart Vest Pro</div>
+  <div>
+    <button onclick="switchTheme()">🌙</button>
+    <button onclick="exportPDF()">📥</button>
+  </div>
+</header>
+
+<div class="main hidden" id="dashboard">
+
+  <!-- CARDS -->
+  <div class="cards">
+    <div class="card" onclick="switchGraph('temp')">
+      Temp <div id="temp" class="value">--</div>
+    </div>
+
+    <div class="card" onclick="switchGraph('gas')">
+      Gas <div id="gas" class="value">--</div>
+    </div>
+
+    <div class="card" onclick="switchGraph('heart')">
+      Heart <div id="heart" class="value">--</div>
+    </div>
+
+    <div class="card">
+      Fall <div id="fall" class="value">--</div>
+    </div>
+  </div>
+
+  <!-- SINGLE / MULTI GRAPH -->
+  <div class="chart-box" id="chartBox">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-box">
+    <iframe id="map"></iframe>
+  </div>
+
+</div>
+
+<script>
+/* ================= LOGIN (IMPROVED BASIC SECURITY) ================= */
+function login(){
+  let u=document.getElementById("user").value.trim();
+  let p=document.getElementById("pass").value.trim();
+
+  let hash = btoa(u+":"+p); // simple encoding layer
+
+  if(hash === btoa("admin:123")){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("dashboard").classList.remove("hidden");
+  } else {
+    alert("❌ Invalid credentials");
+  }
+}
+
+/* ================= THEME ================= */
+function switchTheme(){
+  document.body.classList.toggle("light");
+}
+
+/* ================= FIREBASE ================= */
+firebase.initializeApp({
+  apiKey:"AIzaSyDDWakiO8V17fPGEnLRueCt91SqK6app3M",
+  databaseURL:"https://cw-project-4212c-default-rtdb.asia-southeast1.firebasedatabase.app"
+});
+
+let db=firebase.database();
+
+/* ================= DATA ================= */
+let temp=[], gas=[], heart=[], labels=[];
+
+/* ================= CHART ================= */
+let multiMode=false;
+
+let chart=new Chart(document.getElementById("chart"),{
+  type:"line",
+  data:{
+    labels:labels,
+    datasets:[
+      {label:"Temperature",data:temp},
+      {label:"Gas",data:gas},
+      {label:"Heart",data:heart}
+    ]
+  },
+  options:{
+    responsive:true,
+    maintainAspectRatio:false
+  }
+});
+
+/* ================= BACKGROUND CLICK → MULTI GRAPH ================= */
+document.addEventListener("click",function(e){
+
+  let allowed = ["card","chart-box","map-box","main","body","html"];
+
+  if(e.target.closest(".card")) return;
+
+  multiMode = !multiMode;
+
+  if(multiMode){
+    chart.data.datasets = [
+      {label:"Temperature",data:temp},
+      {label:"Gas",data:gas},
+      {label:"Heart",data:heart}
+    ];
+  }
+
+  chart.update();
+});
+
+/* ================= SWITCH SINGLE GRAPH ================= */
+function switchGraph(type){
+
+  multiMode=false;
+
+  if(type=="temp"){
+    chart.data.datasets=[{label:"Temp",data:temp}];
+  }
+
+  if(type=="gas"){
+    chart.data.datasets=[{label:"Gas",data:gas}];
+  }
+
+  if(type=="heart"){
+    chart.data.datasets=[{label:"Heart",data:heart}];
+  }
+
+  chart.update();
+}
+
+/* ================= PDF ================= */
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  let doc=new jsPDF();
+
+  doc.text("Smart Vest Report",10,10);
+  doc.text("Temp: "+temp.slice(-1),10,20);
+  doc.text("Gas: "+gas.slice(-1),10,30);
+  doc.text("Heart: "+heart.slice(-1),10,40);
+
+  doc.save("report.pdf");
+}
+
+/* ================= LIVE DATA ================= */
+db.ref("/").on("value",snap=>{
+
+  let d=snap.val();
+  if(!d || !d.sensor) return;
+
+  let t=d.sensor.temperature;
+  let g=d.sensor.gas;
+  let h=d.sensor.heartRate;
+  let f=d.sensor.fall;
+
+  let lat=d.gps.latitude;
+  let lng=d.gps.longitude;
+
+  document.getElementById("temp").innerText=t;
+  document.getElementById("gas").innerText=g;
+  document.getElementById("heart").innerText=h;
+  document.getElementById("fall").innerText=f?"YES":"NO";
+
+  labels.push(labels.length);
+  temp.push(t);
+  gas.push(g);
+  heart.push(h);
+
+  if(labels.length>30){
+    labels.shift();
+    temp.shift();
+    gas.shift();
+    heart.shift();
+  }
+
+  chart.update();
+
+  document.getElementById("map").src=
+  `https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed`;
+
+});
+</script>
+
+</body>
+</html>
