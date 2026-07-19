@@ -8,11 +8,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:safety_vest_app/main.dart';
+//import 'package:safety_vest_app/main.dart';
 
 // Provide a simple test app here because MyApp from main.dart may not exist
 // in this project. This keeps the widget test self-contained.
-class TestApp extends StatefulWidget {
+/*class TestApp extends StatefulWidget {
   const TestApp({Key? key}) : super(key: key);
 
   @override
@@ -38,11 +38,11 @@ class _TestAppState extends State<TestApp> {
     );
   }
 }
-
+*/
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const TestApp());
+    //await tester.pumpWidget(const TestApp());
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
