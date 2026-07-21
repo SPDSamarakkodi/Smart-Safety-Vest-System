@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +9,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
 import 'firebase_options.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,7 +72,7 @@ class SmartSafetyVestApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Smart Safety Vest',
       theme: AppTheme.theme,
-      home: const HomePage(),
+      home: const SplashScreen(),
     );
   }
 }
