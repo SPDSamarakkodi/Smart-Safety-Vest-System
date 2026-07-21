@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-import '../main.dart';
+import 'main_navigation.dart';
+//import '../main.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const HomePage(),
+          builder: (context) => const MainNavigation(),
         ),
       );
 

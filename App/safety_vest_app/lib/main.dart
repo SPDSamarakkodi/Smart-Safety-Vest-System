@@ -10,12 +10,16 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
 import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
+import 'services/notification_service.dart';
+//import '../services/history_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await NotificationService.initialize();
   runApp(const SmartSafetyVestApp());
 }
 
@@ -70,8 +74,17 @@ class SmartSafetyVestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Smart Safety Vest',
-      theme: AppTheme.theme,
+
+  title: 'Smart Safety Vest',
+
+  theme: AppTheme.theme,
+
+
+  routes: {
+
+    '/login': (context) => const LoginScreen(),
+
+  },
       home: const SplashScreen(),
     );
   }

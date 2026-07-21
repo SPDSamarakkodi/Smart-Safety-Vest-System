@@ -1,0 +1,391 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
+
+import '../theme/app_theme.dart';
+import '../widgets/sensor_card.dart';
+import '../widgets/status_card.dart';
+import '../widgets/fall_alert.dart';
+
+
+
+class DashboardScreen extends StatefulWidget {
+
+  const DashboardScreen({super.key});
+
+
+  @override
+  State<DashboardScreen> createState()
+      => _DashboardScreenState();
+
+}
+
+
+
+class _DashboardScreenState
+    extends State<DashboardScreen> {
+
+
+final DatabaseReference db =
+FirebaseDatabase.instance.ref();
+
+
+
+double temperature = 0;
+double humidity = 0;
+
+int gas = 0;
+int heartRate = 0;
+
+bool fall = false;
+
+bool online = false;
+
+
+
+@override
+void initState(){
+
+super.initState();
+
+readFirebase();
+
+}
+
+
+
+void readFirebase(){
+
+
+db.onValue.listen((event){
+
+
+final data =
+event.snapshot.value
+as Map<dynamic,dynamic>?;
+
+
+if(data == null) return;
+
+
+
+final sensor =
+data["sensor"];
+
+
+if(sensor == null) return;
+
+
+
+setState((){
+
+
+temperature =
+double.tryParse(
+sensor["temperature"]
+.toString()
+) ?? 0;
+
+
+
+humidity =
+double.tryParse(
+sensor["humidity"]
+.toString()
+) ?? 0;
+
+
+
+gas =
+int.tryParse(
+sensor["gas"]
+.toString()
+) ?? 0;
+
+
+
+heartRate =
+int.tryParse(
+sensor["heartRate"]
+.toString()
+) ?? 0;
+
+
+
+fall =
+sensor["fall"] ?? false;
+
+
+
+online = true;
+
+
+
+});
+
+
+});
+
+
+}
+
+
+
+@override
+Widget build(BuildContext context){
+
+
+return Scaffold(
+
+
+backgroundColor:
+AppTheme.darkBg,
+
+
+body:
+SafeArea(
+
+
+child:
+SingleChildScrollView(
+
+
+padding:
+const EdgeInsets.all(20),
+
+
+
+child:
+Column(
+
+crossAxisAlignment:
+CrossAxisAlignment.start,
+
+
+children:[
+
+
+
+const Text(
+
+"Smart Safety Vest",
+
+style:
+TextStyle(
+
+color:
+Colors.white,
+
+fontSize:28,
+
+fontWeight:
+FontWeight.bold,
+
+),
+
+),
+
+
+
+const SizedBox(height:20),
+
+
+
+StatusCard(
+
+online:
+online,
+
+),
+
+
+
+const SizedBox(height:25),
+
+
+
+const Text(
+
+"Vitals & Environment",
+
+style:
+TextStyle(
+
+color:
+Colors.white,
+
+fontSize:20,
+
+fontWeight:
+FontWeight.bold,
+
+),
+
+),
+
+
+
+const SizedBox(height:15),
+
+
+
+GridView.count(
+
+shrinkWrap:true,
+
+physics:
+const NeverScrollableScrollPhysics(),
+
+
+crossAxisCount:2,
+
+
+crossAxisSpacing:15,
+
+mainAxisSpacing:15,
+
+
+children:[
+
+
+
+SensorCard(
+
+title:"Temperature",
+
+value:
+temperature.toStringAsFixed(1),
+
+unit:"°C",
+
+icon:
+Icons.thermostat,
+
+color:
+AppTheme.accentRose,
+
+),
+
+
+
+SensorCard(
+
+title:"Humidity",
+
+value:
+humidity.toStringAsFixed(1),
+
+unit:"%",
+
+icon:
+Icons.water_drop,
+
+color:
+AppTheme.accentBlue,
+
+),
+
+
+
+SensorCard(
+
+title:"Gas Level",
+
+value:
+gas.toString(),
+
+unit:"ppm",
+
+icon:
+Icons.cloud,
+
+color:
+AppTheme.accentAmber,
+
+),
+
+
+
+SensorCard(
+
+title:"Heart Rate",
+
+value:
+heartRate.toString(),
+
+unit:"BPM",
+
+icon:
+Icons.favorite,
+
+color:
+AppTheme.accentRose,
+
+),
+
+
+
+],
+
+
+),
+
+
+
+const SizedBox(height:30),
+
+
+
+const Text(
+
+"Safety Status",
+
+style:
+TextStyle(
+
+color:
+Colors.white,
+
+fontSize:20,
+
+fontWeight:
+FontWeight.bold,
+
+),
+
+),
+
+
+
+const SizedBox(height:15),
+
+
+
+FallAlert(
+
+fall:
+fall,
+
+),
+
+
+
+],
+
+
+),
+
+
+),
+
+
+),
+
+
+);
+
+
+}
+
+
+
+}
