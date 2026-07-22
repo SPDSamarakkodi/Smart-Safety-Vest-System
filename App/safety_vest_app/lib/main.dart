@@ -12,6 +12,7 @@ import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/notification_service.dart';
+import 'services/history_service.dart';
 //import '../services/history_service.dart';
 
 void main() async {
@@ -20,7 +21,9 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await NotificationService.initialize();
+  HistoryService.startListening();
   runApp(const SmartSafetyVestApp());
+
 }
 
 // ───────────────────────────────────────────────

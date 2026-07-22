@@ -1,50 +1,45 @@
 import 'package:firebase_database/firebase_database.dart';
 
-
 class HistoryService {
-
   static final DatabaseReference db =
       FirebaseDatabase.instance.ref();
 
+  static void startListening() {
+    db.child("sensor").onValue.listen((event) async {
+      final sensor =
+          event.snapshot.value as Map<dynamic, dynamic>?;
 
-  static Future<void> save({
+      if (sensor == null) return;
 
-    required double temperature,
-    required double humidity,
-    required int gas,
-    required int heartRate,
-    required bool fall,
-    required double latitude,
-    required double longitude,
+      await db.child("history").push().set({
+        "temperature":
+            double.tryParse(sensor["temperature"].toString()) ?? 0,
 
-  }) async {
+        "humidity":
+            double.tryParse(sensor["humidity"].toString()) ?? 0,
 
+        "gas":
+            int.tryParse(sensor["gas"].toString()) ?? 0,
 
-    await db
-        .child("history")
-        .push()
-        .set({
+        "heartRate":
+            int.tryParse(sensor["heartRate"].toString()) ?? 0,
 
-      "temperature": temperature,
+        "fall":
+            sensor["fall"] ?? false,
 
-      "humidity": humidity,
+        "latitude":
+            double.tryParse(
+                    sensor["latitude"]?.toString() ?? "0") ??
+                0,
 
-      "gas": gas,
+        "longitude":
+            double.tryParse(
+                    sensor["longitude"]?.toString() ?? "0") ??
+                0,
 
-      "heartRate": heartRate,
-
-      "fall": fall,
-
-      "latitude": latitude,
-
-      "longitude": longitude,
-
-      "timestamp":
-      DateTime.now()
-          .millisecondsSinceEpoch,
-
+        "timestamp":
+            ServerValue.timestamp,
+      });
     });
-
   }
-
 }
