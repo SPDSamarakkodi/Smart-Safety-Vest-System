@@ -40,7 +40,10 @@ bool fall = false;
 
 bool online = false;
 
+DateTime? lastUpdated;
 
+String workerStatus = "SAFE";
+Color workerStatusColor = Colors.green;
 
 @override
 void initState(){
@@ -117,8 +120,29 @@ sensor["fall"] ?? false;
 
 
 online = true;
+lastUpdated = DateTime.now();
+// Determine worker health status
 
-
+if (fall) {
+  workerStatus = "DANGER";
+  workerStatusColor = Colors.red;
+}
+else if (gas >= 300) {
+  workerStatus = "DANGER";
+  workerStatusColor = Colors.red;
+}
+else if (temperature >= 38) {
+  workerStatus = "WARNING";
+  workerStatusColor = Colors.orange;
+}
+else if (heartRate >= 120 || heartRate <= 50) {
+  workerStatus = "WARNING";
+  workerStatusColor = Colors.orange;
+}
+else {
+  workerStatus = "SAFE";
+  workerStatusColor = Colors.green;
+}
 
 });
 
@@ -165,39 +189,91 @@ children:[
 
 
 
-const Text(
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.all(22),
+  decoration: BoxDecoration(
+    gradient: LinearGradient(
+      colors: [
+        AppTheme.accentBlue,
+        AppTheme.accentCyan,
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    borderRadius: BorderRadius.circular(25),
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
 
-"Smart Safety Vest",
+      Row(
+        children: const [
 
-style:
-TextStyle(
+          Icon(
+            Icons.shield,
+            color: Colors.white,
+            size: 34,
+          ),
 
-color:
-Colors.white,
+          SizedBox(width: 12),
 
-fontSize:28,
+          Text(
+            "Smart Safety Vest",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
 
-fontWeight:
-FontWeight.bold,
+      SizedBox(height: 10),
 
+      Text(
+        "Real-Time Worker Monitoring System",
+        style: TextStyle(
+          color: Colors.white70,
+          fontSize: 15,
+        ),
+      ),
+const SizedBox(height: 10),
+
+Row(
+  children: [
+
+    Icon(
+      Icons.health_and_safety,
+      color: workerStatusColor,
+      size: 20,
+    ),
+
+    const SizedBox(width: 8),
+
+    Text(
+      workerStatus,
+      style: TextStyle(
+        color: workerStatusColor,
+        fontWeight: FontWeight.bold,
+        fontSize: 16,
+      ),
+    ),
+
+  ],
 ),
-
+    ],
+  ),
 ),
-
-
 
 const SizedBox(height:20),
 
-
-
 StatusCard(
-
-online:
-online,
-
+  online: online,
+  lastUpdated: lastUpdated,
+  workerStatus: workerStatus,
+  workerStatusColor: workerStatusColor,
 ),
-
-
 
 const SizedBox(height:25),
 

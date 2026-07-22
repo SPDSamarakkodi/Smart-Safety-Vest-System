@@ -8,14 +8,18 @@ class StatusCard extends StatelessWidget {
 
 
 final bool online;
+final DateTime? lastUpdated;
+
+final String workerStatus;
+final Color workerStatusColor;
 
 
 const StatusCard({
-
-super.key,
-
-required this.online,
-
+  super.key,
+  required this.online,
+  required this.lastUpdated,
+  required this.workerStatus,
+  required this.workerStatusColor,
 });
 
 
@@ -127,18 +131,16 @@ FontWeight.bold,
 const SizedBox(height:5),
 
 
-const Text(
-
-"Real-time telemetry active",
-
-style:
-TextStyle(
-
-color:
-Colors.white70,
-
-),
-
+Text(
+  lastUpdated == null
+      ? "Waiting for sensor data..."
+      : "Last Updated : "
+          "${lastUpdated!.hour.toString().padLeft(2, '0')}:"
+          "${lastUpdated!.minute.toString().padLeft(2, '0')}:"
+          "${lastUpdated!.second.toString().padLeft(2, '0')}",
+  style: const TextStyle(
+    color: Colors.white70,
+  ),
 )
 
 

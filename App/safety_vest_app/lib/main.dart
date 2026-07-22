@@ -14,6 +14,21 @@ import 'screens/login_screen.dart';
 import 'services/notification_service.dart';
 import 'services/history_service.dart';
 //import '../services/history_service.dart';
+import 'package:provider/provider.dart';
+import 'providers/theme_provider.dart';
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,9 +37,35 @@ void main() async {
   );
   await NotificationService.initialize();
   HistoryService.startListening();
-  runApp(const SmartSafetyVestApp());
+
+  runApp(
+
+ChangeNotifierProvider(
+
+create:(context)=>
+ThemeProvider(),
+
+
+child:
+const SmartSafetyVestApp(),
+
+)
+
+);
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ───────────────────────────────────────────────
 // Modern Color Palette & Theme
@@ -73,24 +114,66 @@ class AppTheme {
 class SmartSafetyVestApp extends StatelessWidget {
   const SmartSafetyVestApp({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
+ @override
+Widget build(BuildContext context) {
 
-  title: 'Smart Safety Vest',
+return Consumer<ThemeProvider>(
 
-  theme: AppTheme.theme,
+builder:(context, theme, child){
 
 
-  routes: {
+return MaterialApp(
 
-    '/login': (context) => const LoginScreen(),
+debugShowCheckedModeBanner:false,
 
-  },
-      home: const SplashScreen(),
-    );
-  }
+
+title:
+'Smart Safety Vest',
+
+
+
+themeMode:
+theme.themeMode,
+
+
+
+// Light Theme
+theme:
+
+ThemeData.light(),
+
+
+
+// Dark Theme
+darkTheme:
+
+AppTheme.theme,
+
+
+
+routes:{
+
+
+'/login':
+(context)=> const LoginScreen(),
+
+
+},
+
+
+
+home:
+const SplashScreen(),
+
+
+);
+
+
+},
+
+);
+
+}
 }
 
 // ───────────────────────────────────────────────

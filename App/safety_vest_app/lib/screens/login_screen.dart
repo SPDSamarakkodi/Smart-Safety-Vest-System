@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main_navigation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 //import '../main.dart';
 
 
@@ -13,6 +15,20 @@ class LoginScreen extends StatefulWidget {
 
 
 class _LoginScreenState extends State<LoginScreen> {
+  String version = "";
+  Future<void> loadVersion() async {
+
+  PackageInfo packageInfo =
+      await PackageInfo.fromPlatform();
+
+  setState(() {
+
+    version =
+        "Version ${packageInfo.version}";
+
+  });
+
+}
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -25,13 +41,31 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> login() async {
 
-    if (emailController.text.isEmpty ||
-        passwordController.text.isEmpty) {
+    final email = emailController.text.trim();
+final password = passwordController.text;
 
-      showMessage("Please enter email and password");
-      return;
-    }
+if (email.isEmpty) {
+  showMessage("Please enter your email");
+  return;
+}
 
+if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+  showMessage("Please enter a valid email address");
+  return;
+}
+
+if (password.isEmpty) {
+  showMessage("Please enter your password");
+  return;
+}
+
+if (password.length < 6) {
+  showMessage("Password must contain at least 6 characters");
+  return;
+}
+if (!await checkInternet()) {
+  return;
+}
 
     setState(() {
       loading = true;
@@ -89,7 +123,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
   }
 
+Future<void> resetPassword() async {
 
+  final email = emailController.text.trim();
+
+  if (email.isEmpty) {
+    showMessage("Enter your email first.");
+    return;
+  }
+
+  try {
+
+    await _auth.sendPasswordResetEmail(
+      email: email,
+    );
+
+    showMessage(
+      "Password reset email sent.",
+    );
+
+  } on FirebaseAuthException catch (e) {
+
+    showMessage(
+      e.message ?? "Unable to send reset email.",
+    );
+
+  }
+
+}
 
   void showMessage(String text){
 
@@ -285,7 +346,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   child: TextButton(
 
-                    onPressed:(){},
+                    onPressed: resetPassword,
 
                     child:
                     const Text(
@@ -349,7 +410,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
 
                 ),
+const SizedBox(height: 30),
 
+Text(
+  version,
+  style: const TextStyle(
+    color: Colors.white54,
+    fontSize: 12,
+  ),
+),
 
               ],
 
@@ -426,5 +495,24 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
 
   }
+@override
+void initState() {
+  super.initState();
+  loadVersion();
+}
+Future<bool> checkInternet() async {
 
+  final result =
+      await Connectivity().checkConnectivity();
+
+  if (result == ConnectivityResult.none) {
+
+    showMessage("No internet connection.");
+
+    return false;
+  }
+
+  return true;
+
+}
 }
