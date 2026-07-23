@@ -4,7 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
 import 'package:latlong2/latlong.dart';
-
+import 'dart:async';
 import '../theme/app_theme.dart';
 
 
@@ -29,7 +29,7 @@ class _MapScreenState
 
 late final AnimatedMapController mapController;
 
-
+StreamSubscription<DatabaseEvent>? _gpsSubscription;
 final DatabaseReference db =
 FirebaseDatabase.instance.ref();
 
@@ -63,7 +63,7 @@ readGPS();
 void readGPS(){
 
 
-db.onValue.listen((event){
+_gpsSubscription = db.onValue.listen((event){
 
 
 final data =
@@ -85,21 +85,19 @@ if(gps == null)return;
 
 
 
-setState((){
+if (!mounted) return;
 
+setState((){
 
 latitude =
 double.tryParse(
 gps["latitude"].toString()
 ) ?? 0;
 
-
 longitude =
 double.tryParse(
 gps["longitude"].toString()
 ) ?? 0;
-
-
 
 });
 
@@ -326,11 +324,13 @@ Icons.my_location,
 
 
 @override
-void dispose(){
+void dispose() {
 
-mapController.dispose();
+  _gpsSubscription?.cancel();
 
-super.dispose();
+  mapController.dispose();
+
+  super.dispose();
 
 }
 

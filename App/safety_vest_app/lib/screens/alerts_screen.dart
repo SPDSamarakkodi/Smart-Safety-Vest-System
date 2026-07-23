@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
-
+import 'dart:async';
 
 
 class AlertsScreen extends StatefulWidget {
@@ -21,6 +21,7 @@ class AlertsScreen extends StatefulWidget {
 class _AlertsScreenState
 extends State<AlertsScreen>{
 
+StreamSubscription<DatabaseEvent>? _alertsSubscription;
 
 final DatabaseReference db =
 FirebaseDatabase.instance.ref();
@@ -53,6 +54,7 @@ listenAlerts();
 void listenAlerts(){
 
 
+_alertsSubscription =
 db.onValue.listen((event){
 
 
@@ -146,9 +148,11 @@ void generateAlerts() {
     );
   }
 
-  setState(() {
-    alerts = newAlerts;
-  });
+if (!mounted) return;
+
+setState(() {
+  alerts = newAlerts;
+});
 }
 
 
@@ -362,5 +366,13 @@ Colors.white70,
 
 }
 
+@override
+void dispose() {
+
+  _alertsSubscription?.cancel();
+
+  super.dispose();
+
+}
 
 }

@@ -32,33 +32,29 @@ Map? deviceData;
 Map? userData;
 Map? emergencyContact;
 
-void initState(){
+@override
+void initState() {
+  super.initState();
 
-super.initState();
+  print(FirebaseAuth.instance.currentUser?.uid);
 
-loadUser();
-
-loadDevice();
-
-loadContact();
-
+  loadUser();
+  loadDevice();
+  loadContact();
 }
 
 
 
-void loadUser() async{
+void loadUser() async {
 
+  final data =
+      await UserService.getUserData();
 
-final data =
-await UserService.getUserData();
+  if (!mounted) return;
 
-
-setState((){
-
-userData=data;
-
-});
-
+  setState(() {
+    userData = data;
+  });
 
 }
 
@@ -773,65 +769,92 @@ const Text(
 ElevatedButton(
 
 
-onPressed:() async{
+onPressed: () async {
 
+  if (passwordController.text.isEmpty) {
 
-try{
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Please enter a password"),
+      ),
+    );
 
+    return;
+  }
 
-await FirebaseAuth
-.instance
-.currentUser!
-.updatePassword(
-passwordController.text
-);
+  if (passwordController.text.length < 6) {
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Password must be at least 6 characters"),
+      ),
+    );
 
+    return;
+  }
 
-Navigator.pop(context);
+  final user = FirebaseAuth.instance.currentUser;
 
+  if (user == null) {
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("No user is signed in"),
+      ),
+    );
 
-ScaffoldMessenger.of(context)
-.showSnackBar(
+    return;
+  }
 
-const SnackBar(
+  try {
 
-content:
+    await user.updatePassword(
+      passwordController.text,
+    );
 
-Text(
-"Password Updated Successfully"
-),
+    Navigator.pop(context);
 
-),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Password Updated Successfully"),
+      ),
+    );
 
-);
+  } on FirebaseAuthException catch (e) {
 
+    String message;
 
+    switch (e.code) {
 
-}
+      case "requires-recent-login":
+        message =
+            "Please log in again before changing your password.";
+        break;
 
-catch(e){
+      case "weak-password":
+        message =
+            "Please choose a stronger password.";
+        break;
 
+      default:
+        message = e.message ?? "Password update failed.";
+    }
 
-ScaffoldMessenger.of(context)
-.showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
 
-SnackBar(
+  } catch (e) {
 
-content:
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(e.toString()),
+      ),
+    );
 
-Text(
-e.toString()
-),
-
-),
-
-);
-
-
-}
-
+  }
 
 },
 
@@ -1007,21 +1030,19 @@ const Text(
 
 
 }
-void loadDevice() async{
+void loadDevice() async {
 
+  final data =
+      await DeviceService.getDeviceData();
 
-final data =
-await DeviceService.getDeviceData();
+  if (!mounted) return;
 
-
-setState((){
-
-deviceData=data;
-
-});
-
+  setState(() {
+    deviceData = data;
+  });
 
 }
+
 void _showDeviceDialog(){
 
 
@@ -1112,21 +1133,22 @@ const Text("Close"),
 
 
 }
-void loadContact() async{
 
 
-final data =
-await ContactService.getContact();
+void loadContact() async {
 
+  final data =
+      await ContactService.getContact();
 
-setState((){
+  if (!mounted) return;
 
-emergencyContact=data;
-
-});
-
+  setState(() {
+    emergencyContact = data;
+  });
 
 }
+
+
 void _showEmergencyDialog(){
 
 
@@ -1234,27 +1256,75 @@ actions:[
 
 ElevatedButton(
 
-onPressed:() async{
+onPressed: () async {
 
+  // Validate Name
+  if (nameController.text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Please enter a contact name"),
+      ),
+    );
+    return;
+  }
 
-await ContactService.saveContact(
+  // Validate Phone
+  if (phoneController.text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Please enter a phone number"),
+      ),
+    );
+    return;
+  }
 
-nameController.text,
+  if (phoneController.text.trim().length < 10) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Phone number must be at least 10 digits"),
+      ),
+    );
+    return;
+  }
 
-phoneController.text,
+  // Validate Email
+  if (emailController.text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Please enter an email address"),
+      ),
+    );
+    return;
+  }
 
-emailController.text,
+  final emailRegex = RegExp(
+    r'^[\w\.-]+@[\w\.-]+\.\w+$',
+  );
 
-);
+  if (!emailRegex.hasMatch(emailController.text.trim())) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Please enter a valid email address"),
+      ),
+    );
+    return;
+  }
 
+  await ContactService.saveContact(
+    nameController.text.trim(),
+    phoneController.text.trim(),
+    emailController.text.trim(),
+  );
 
+  Navigator.pop(context);
 
-Navigator.pop(context);
+  loadContact();
 
-
-loadContact();
-
-
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("Emergency contact saved successfully"),
+    ),
+  );
 },
 
 

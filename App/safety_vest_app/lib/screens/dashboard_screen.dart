@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-
+import 'dart:async';
 import '../theme/app_theme.dart';
 import '../widgets/sensor_card.dart';
 import '../widgets/status_card.dart';
@@ -24,6 +24,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState
     extends State<DashboardScreen> {
 
+StreamSubscription<DatabaseEvent>? _dashboardSubscription;
 
 final DatabaseReference db =
 FirebaseDatabase.instance.ref();
@@ -59,7 +60,8 @@ readFirebase();
 void readFirebase(){
 
 
-db.onValue.listen((event){
+_dashboardSubscription =
+    db.onValue.listen((event){
 
 
 final data =
@@ -79,7 +81,11 @@ if(sensor == null) return;
 
 
 
+if (!mounted) return;
+
 setState((){
+
+temperature =
 
 
 temperature =
@@ -462,6 +468,13 @@ fall,
 
 }
 
+@override
+void dispose() {
 
+  _dashboardSubscription?.cancel();
+
+  super.dispose();
+
+}
 
 }
