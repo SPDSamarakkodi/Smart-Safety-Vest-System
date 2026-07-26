@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,14 +9,61 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
 import 'firebase_options.dart';
+import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
+import 'services/notification_service.dart';
+//import '../services/history_service.dart';
+import 'package:provider/provider.dart';
+import 'providers/theme_provider.dart';
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const SmartSafetyVestApp());
+  await NotificationService.initialize();
+
+  runApp(
+
+ChangeNotifierProvider(
+
+create:(context)=>
+ThemeProvider(),
+
+
+child:
+const SmartSafetyVestApp(),
+
+)
+
+);
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ───────────────────────────────────────────────
 // Modern Color Palette & Theme
@@ -63,15 +112,66 @@ class AppTheme {
 class SmartSafetyVestApp extends StatelessWidget {
   const SmartSafetyVestApp({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Smart Safety Vest',
-      theme: AppTheme.theme,
-      home: const HomePage(),
-    );
-  }
+ @override
+Widget build(BuildContext context) {
+
+return Consumer<ThemeProvider>(
+
+builder:(context, theme, child){
+
+
+return MaterialApp(
+
+debugShowCheckedModeBanner:false,
+
+
+title:
+'Smart Safety Vest',
+
+
+
+themeMode:
+theme.themeMode,
+
+
+
+// Light Theme
+theme:
+
+ThemeData.light(),
+
+
+
+// Dark Theme
+darkTheme:
+
+AppTheme.theme,
+
+
+
+routes:{
+
+
+'/login':
+(context)=> const LoginScreen(),
+
+
+},
+
+
+
+home:
+const SplashScreen(),
+
+
+);
+
+
+},
+
+);
+
+}
 }
 
 // ───────────────────────────────────────────────

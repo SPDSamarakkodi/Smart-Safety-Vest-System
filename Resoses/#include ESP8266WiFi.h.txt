@@ -1,0 +1,202 @@
+#include <ESP8266WiFi.h>
+#include <Firebase.h>
+#include "secrets.h"
+
+#include <DHT.h>
+#include <Wire.h>
+#include <MPU6050.h>
+#include <SoftwareSerial.h>
+#include <TinyGPS++.h>
+
+// ---------------- HEART RATE SENSOR ----------------
+// Example: Pulse Sensor connected to A0
+// NOTE:
+// MQ7 and Pulse Sensor cannot BOTH use A0 directly on NodeMCU.
+// You must:
+// 1. Use external ADC module OR
+// 2. Use analog multiplexer OR
+// 3. Replace MQ7 with digital module
+//
+// TEMPORARY DEMO:
+// Heart rate simulated from analog input.
+
+#define HEART_RATE_PIN A0
+
+// ---------------- DHT ----------------
+#define DHTPIN D4
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+// ---------------- MQ7 ----------------
+#define MQ7_PIN A0
+
+// ---------------- BUZZER & LED ----------------
+#define BUZZER D5
+#define LED D6
+
+// ---------------- MPU6050 ----------------
+MPU6050 mpu;
+
+// ---------------- GPS ----------------
+SoftwareSerial gpsSerial(D7, D8); // RX, TX
+TinyGPSPlus gps;
+
+// ---------------- FIREBASE ----------------
+Firebase fb(REFERENCE_URL);
+
+// ---------------- VARIABLES ----------------
+float temperature = 0;
+int gasValue = 0;
+int heartRate = 0;
+
+// MPU VALUES
+int16_t ax, ay, az;
+
+bool fallDetected = false;
+
+// ---------------- SETUP ----------------
+void setup() {
+
+  Serial.begin(9600);
+
+  pinMode(BUZZER, OUTPUT);
+  pinMode(LED, OUTPUT);
+
+  dht.begin();
+
+  // MPU6050
+  Wire.begin(D1, D2);
+  mpu.initialize();
+
+  // GPS
+  gpsSerial.begin(9600);
+
+  // WIFI
+  Serial.print("Connecting to: ");
+  Serial.println(WIFI_SSID);
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print("-");
+    delay(500);
+  }
+
+  Serial.println();
+  Serial.println("WiFi Connected!");
+}
+
+// ---------------- LOOP ----------------
+void loop() {
+
+  // =========================
+  // DHT11 TEMPERATURE
+  // =========================
+  float tempRead = dht.readTemperature();
+
+  if (!isnan(tempRead)) {
+    temperature = tempRead;
+  } else {
+    Serial.println("DHT Error!");
+  }
+
+  // =========================
+  // MQ7 GAS SENSOR
+  // =========================
+  gasValue = analogRead(MQ7_PIN);
+
+  // =========================
+  // HEART RATE SENSOR
+  // =========================
+  int pulseValue = analogRead(HEART_RATE_PIN);
+
+  // Simple BPM mapping
+  heartRate = map(pulseValue, 0, 1023, 60, 120);
+
+  // =========================
+  // MPU6050 FALL DETECTION
+  // =========================
+  mpu.getAcceleration(&ax, &ay, &az);
+
+  // Convert to g-force
+  float fax = ax / 16384.0;
+  float fay = ay / 16384.0;
+  float faz = az / 16384.0;
+
+  float totalAccel = sqrt(fax * fax + fay * fay + faz * faz);
+
+  // Fall Detection
+  if (totalAccel > 2.5) {
+    fallDetected = true;
+  }
+  else if (totalAccel < 1.2) {
+    fallDetected = false;
+  }
+
+  // =========================
+  // GPS
+  // =========================
+  while (gpsSerial.available()) {
+    gps.encode(gpsSerial.read());
+  }
+
+  float latitude = 0.0;
+  float longitude = 0.0;
+
+  if (gps.location.isValid()) {
+    latitude = gps.location.lat();
+    longitude = gps.location.lng();
+  }
+
+  // =========================
+  // ALERT SYSTEM
+  // =========================
+  if (gasValue > 300 || fallDetected || heartRate > 110) {
+
+    digitalWrite(BUZZER, HIGH);
+    digitalWrite(LED, HIGH);
+
+  } else {
+
+    digitalWrite(BUZZER, LOW);
+    digitalWrite(LED, LOW);
+  }
+
+  // =========================
+  // FIREBASE UPDATE
+  // =========================
+  fb.setFloat("sensor/temperature", temperature);
+  fb.setInt("sensor/gas", gasValue);
+  fb.setInt("sensor/heartRate", heartRate);
+  fb.setBool("sensor/fall", fallDetected);
+
+  fb.setFloat("gps/latitude", latitude);
+  fb.setFloat("gps/longitude", longitude);
+
+  // =========================
+  // SERIAL MONITOR
+  // =========================
+  Serial.println("------ DATA ------");
+
+  Serial.print("Temperature: ");
+  Serial.println(temperature);
+
+  Serial.print("Gas: ");
+  Serial.println(gasValue);
+
+  Serial.print("Heart Rate: ");
+  Serial.println(heartRate);
+
+  Serial.print("Fall: ");
+  Serial.println(fallDetected);
+
+  Serial.print("Latitude: ");
+  Serial.println(latitude);
+
+  Serial.print("Longitude: ");
+  Serial.println(longitude);
+
+  Serial.println();
+
+  delay(2000);
+}

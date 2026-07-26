@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <Firebase.h>
 #include "secrets.h"
+#include <time.h>
 
 #include <Wire.h>
 #include <DHT.h>
@@ -39,9 +40,11 @@ SoftwareSerial gpsSerial(GPS_RX, GPS_TX);
 TinyGPSPlus gps;
 Firebase fb(REFERENCE_URL);
 
+
 //=================================================
 // VARIABLES
 //=================================================
+
 
 float temperature = 0;
 float humidity = 0;
@@ -70,6 +73,25 @@ long irValue = 0;
 
 unsigned long lastFirebase = 0;
 unsigned long lastPrint = 0;
+unsigned long lastSensorRead = 0;
+
+
+
+
+
+unsigned long getTimestamp()
+{
+    return (unsigned long)time(nullptr);
+}
+
+
+String createID()
+{
+    return String(millis());
+}
+
+
+
 
 //=================================================
 // HEART CALLBACK
@@ -79,6 +101,11 @@ void onBeatDetected()
 {
     Serial.println("*** BEAT DETECTED ***");
 }
+
+
+
+
+
 
 //=================================================
 // SETUP
@@ -158,7 +185,42 @@ void setup()
 
     Serial.println();
     Serial.println("WiFi Connected");
+
+    // Sri Lanka Time (UTC +5:30)
+configTime(19800, 0, "pool.ntp.org", "time.nist.gov");
+
+Serial.println("Synchronizing time...");
+
+time_t now = time(nullptr);
+
+while (now < 100000)
+{
+    delay(500);
+    Serial.print(".");
+
+    now = time(nullptr);
 }
+
+Serial.println();
+Serial.println("Time synchronized!");
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //=================================================
 // LOOP
@@ -214,34 +276,43 @@ void loop()
         }
     }
 
-    //=================================================
-    // DHT11
-    //=================================================
+if(millis() - lastSensorRead > 1000)
+{
 
-    temperature = dht.readTemperature();
-    humidity = dht.readHumidity();
+lastSensorRead = millis();
 
-    //=================================================
-    // MQ7
-    //=================================================
 
-    gasValue = analogRead(MQ7_PIN);
+// DHT11
 
-    //=================================================
-    // MPU6050
-    //=================================================
+temperature = dht.readTemperature();
 
-    mpu.getAcceleration(&ax, &ay, &az);
+humidity = dht.readHumidity();
 
-    float x = ax / 16384.0;
-    float y = ay / 16384.0;
-    float z = az / 16384.0;
 
-    float totalAccel =
-        sqrt(x*x + y*y + z*z);
+// MQ7
 
-    fallDetected = (totalAccel > 2.5);
+gasValue = analogRead(MQ7_PIN);
 
+
+// MPU6050
+
+mpu.getAcceleration(&ax,&ay,&az);
+
+
+float x=ax/16384.0;
+float y=ay/16384.0;
+float z=az/16384.0;
+
+
+float totalAccel =
+sqrt(x*x+y*y+z*z);
+
+
+fallDetected =
+(totalAccel > 2.5);
+
+
+}
     //=================================================
     // GPS
     //=================================================
@@ -255,7 +326,13 @@ void loop()
 
   // Display GPS information
   if (gps.location.isUpdated()) {
+    latitude = gps.location.lat();
+    longitude = gps.location.lng();
 
+
+
+
+//delete
     Serial.println("----------------------");
 
     Serial.print("Latitude : ");
@@ -266,17 +343,7 @@ void loop()
     Serial.println(gps.location.lng(), 6);
 
 
-    Serial.print("Altitude : ");
-    Serial.print(gps.altitude.meters());
-    Serial.println(" m");
-
-
-    Serial.print("Satellites: ");
-    Serial.println(gps.satellites.value());
-
-
-    Serial.print("HDOP: ");
-    Serial.println(gps.hdop.value());
+//delete
   }
 
     if (gps.date.isValid()) {
@@ -379,24 +446,248 @@ void loop()
     //=================================================
 
     if (millis() - lastFirebase > 10000)
-    {
-        lastFirebase = millis();
+{
 
-        fb.setFloat("sensor/temperature", temperature);
-        fb.setFloat("sensor/humidity", humidity);
-        fb.setInt("sensor/gas", gasValue);
-        fb.setInt("sensor/heartRate", heartRate);
-        fb.setBool("sensor/fall", fallDetected);
+    lastFirebase = millis();
 
-        fb.setString("gps/latitude", String(latitude, 6));
-        fb.setString("gps/longitude", String(longitude, 6));
-    }
+
+    // =========================
+    // CURRENT SENSOR DATA
+    // =========================
+
+
+    fb.setFloat(
+        "sensor/temperature",
+        temperature
+    );
+
+
+    fb.setFloat(
+        "sensor/humidity",
+        humidity
+    );
+
+
+    fb.setInt(
+        "sensor/gas",
+        gasValue
+    );
+
+
+    fb.setInt(
+        "sensor/heartRate",
+        heartRate
+    );
+
+
+    fb.setBool(
+        "sensor/fall",
+        fallDetected
+    );
+
+
+
+
+
+    // =========================
+    // CURRENT GPS
+    // =========================
+
+
+    fb.setString(
+        "gps/latitude",
+        String(latitude,6)
+    );
+
+
+    fb.setString(
+        "gps/longitude",
+        String(longitude,6)
+    );
+
+
+
+    
+// =========================
+// HISTORY RECORD
+// =========================
+
+
+String historyID = createID();
+
+
+String historyPath =
+"history/" + historyID;
+
+
+
+fb.setFloat(
+historyPath + "/temperature",
+temperature
+);
+
+
+fb.setFloat(
+historyPath + "/humidity",
+humidity
+);
+
+
+
+fb.setInt(
+historyPath + "/gas",
+gasValue
+);
+
+
+
+fb.setInt(
+historyPath + "/heartRate",
+heartRate
+);
+
+
+
+fb.setBool(
+historyPath + "/fall",
+fallDetected
+);
+
+
+
+fb.setString(
+historyPath + "/latitude",
+String(latitude,6)
+);
+
+
+
+fb.setString(
+historyPath + "/longitude",
+String(longitude,6)
+);
+
+
+
+fb.setInt(
+historyPath + "/timestamp",
+getTimestamp()
+);
+
+
+}
+
+
+
+
+
+// =========================
+// ALERT SYSTEM
+// =========================
+
+
+if(
+fallDetected ||
+gasValue > 800 ||
+heartRate > 110
+)
+
+{
+
+String alertID = createID();
+
+
+String alertPath =
+"alerts/" + alertID;
+
+
+
+if(fallDetected)
+{
+
+fb.setString(
+alertPath+"/type",
+"Fall"
+);
+
+
+fb.setString(
+alertPath+"/message",
+"Worker fall detected"
+);
+fb.setString(
+alertPath + "/status",
+"NEW"
+);
+}
+
+else if(gasValue > 800)
+{
+
+fb.setString(
+alertPath+"/type",
+"Gas Warning"
+);
+
+
+fb.setString(
+alertPath+"/message",
+"High gas level detected"
+);
+
+fb.setString(
+alertPath + "/status",
+"NEW"
+);
+
+}
+
+
+
+fb.setInt(
+alertPath+"/gas",
+gasValue
+);
+
+
+
+fb.setInt(
+alertPath+"/heartRate",
+heartRate
+);
+
+
+
+fb.setString(
+alertPath+"/latitude",
+String(latitude,6)
+);
+
+
+
+fb.setString(
+alertPath+"/longitude",
+String(longitude,6)
+);
+
+
+
+fb.setInt(
+alertPath + "/timestamp",
+getTimestamp()
+);
+
+
+
+
+}
+
 
     //=================================================
     // SERIAL MONITOR
     //=================================================
 
-    if (millis() - lastPrint > 1000)
+if (millis() - lastPrint > 5000)
     {
         lastPrint = millis();
 
@@ -447,4 +738,5 @@ void loop()
 
     // important for ESP8266 WiFi tasks
     yield();
+
 }

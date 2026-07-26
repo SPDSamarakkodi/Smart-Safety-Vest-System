@@ -1,0 +1,59 @@
+Firebase Realtime Database
+│
+├── users
+│   │
+│   ├── userId_001
+│   │   ├── name: "Pavan"
+│   │   ├── email: "admin@gmail.com"
+│   │   ├── role: "admin"
+│   │   └── emergencyContact: 1784667526348
+|            ├── email:"pavana@gmail.com"
+|            ├── name: "pavana"
+|            ├── phone: "+94743589382"
+|
+│
+│
+├── history
+│   │
+│   ├── -Oy5TLJiDKo_eAZesDNI
+│   │   ├── temperature: 22.1
+│   │   ├── humidity: 81
+│   │   ├── gas: 900
+│   │   ├── heartRate: 0
+│   │   ├── fall: false
+│   │   ├── latitude: 6.819775
+│   │   ├── longitude: 79.875325
+│   │   └── timestamp: 1784667526348
+│   │
+│   ├── -Oy5TLK9oUYwrrwlW2Ns
+│   │   ├── temperature: 22.4
+│   │   ├── humidity: 80
+│   │   ├── gas: 870
+│   │   ├── heartRate: 78
+│   │   ├── fall: false
+│   │   ├── latitude: 6.819800
+│   │   ├── longitude: 79.875400
+│   │   └── timestamp: 1784667586348
+│
+|
+|
+├── alerts:false
+|
+|
+|
+│   
+├── sensor
+│   ├── fall:false
+│   ├── gas:126
+│   ├── heartRate:73
+│   ├── humidity:82.7
+│   └── temperature:25.2
+│
+└── gps
+    │
+    ├── latitude:"6.819835"
+    ├── longitude:"79.875325"
+
+
+
+
