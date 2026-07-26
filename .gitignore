@@ -1,0 +1,6 @@
+# Screen recordings
+*.mp4
+
+# Large media files
+*.mov
+*.avi
