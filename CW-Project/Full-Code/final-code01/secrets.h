@@ -4,8 +4,8 @@
   ---------------------------------
 */
 
-#define WIFI_SSID     "SAMSUNG GALAXY A9(2018)"
-#define WIFI_PASSWORD "123456788"
+#define WIFI_SSID     "Dialog 4G 754"
+#define WIFI_PASSWORD "972BbdC1"
 
 /*
   ---------------------------------
