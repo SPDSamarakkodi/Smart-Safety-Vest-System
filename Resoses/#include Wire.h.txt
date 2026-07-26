@@ -1,0 +1,144 @@
+#include <Wire.h>
+#include <MPU6050.h>
+#include "MAX30105.h"
+#include <TinyGPS++.h>
+#include <SoftwareSerial.h>
+
+// ======================================
+// Create Objects
+// ======================================
+MPU6050 mpu;
+MAX30105 maxSensor;
+TinyGPSPlus gps;
+
+// GPS RX, TX for ESP8266
+// GPS TX -> D6
+// GPS RX -> D5
+SoftwareSerial ss(D6, D5);
+
+// ======================================
+// MPU6050 Variables
+// ======================================
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+
+void setup()
+{
+    Serial.begin(115200);
+
+    // ======================================
+    // I2C Setup
+    // SDA = D2
+    // SCL = D1
+    // ======================================
+    Wire.begin(D2, D1);
+
+    // ======================================
+    // GPS Serial
+    // ======================================
+    ss.begin(9600);
+
+    Serial.println();
+    Serial.println("=================================");
+    Serial.println("Initializing All Sensors...");
+    Serial.println("=================================");
+
+    // ======================================
+    // MPU6050 Initialization
+    // ======================================
+    Serial.println("Initializing MPU6050...");
+
+    mpu.initialize();
+
+    if (mpu.testConnection())
+    {
+        Serial.println("✓ MPU6050 Connected!");
+    }
+    else
+    {
+        Serial.println("✗ MPU6050 Connection Failed!");
+    }
+
+    // ======================================
+    // MAX30102 Initialization
+    // ======================================
+    Serial.println("Initializing MAX30102...");
+
+    if (!maxSensor.begin())
+    {
+        Serial.println("✗ MAX30102 Not Found!");
+    }
+    else
+    {
+        Serial.println("✓ MAX30102 Connected!");
+        maxSensor.setup();
+    }
+
+    // ======================================
+    // GPS Initialization
+    // ======================================
+    Serial.println("Initializing GPS...");
+    Serial.println("Move to open area for satellite lock");
+
+    delay(2000);
+}
+
+void loop()
+{
+    // Continuously read GPS data
+    while (ss.available() > 0)
+    {
+        gps.encode(ss.read());
+    }
+
+    // Read MPU6050
+    mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+
+    // Read MAX30102
+    long irValue = maxSensor.getIR();
+    long redValue = maxSensor.getRed();
+
+    Serial.println();
+    Serial.println("=================================");
+
+    // MPU6050
+    Serial.println("MPU6050");
+
+    Serial.print("AX: ");
+    Serial.print(ax);
+
+    Serial.print(" AY: ");
+    Serial.print(ay);
+
+    Serial.print(" AZ: ");
+    Serial.println(az);
+
+    // MAX30102
+    Serial.println("MAX30102");
+
+    Serial.print("IR: ");
+    Serial.println(irValue);
+
+    // GPS
+    Serial.println("GPS");
+
+    if (gps.location.isValid())
+    {
+        Serial.print("Lat: ");
+        Serial.println(gps.location.lat(), 6);
+
+        Serial.print("Lng: ");
+        Serial.println(gps.location.lng(), 6);
+
+        Serial.print("Sat: ");
+        Serial.println(gps.satellites.value());
+    }
+    else
+    {
+        Serial.println("Waiting GPS...");
+    }
+
+    Serial.println("=================================");
+
+    delay(200);
+}

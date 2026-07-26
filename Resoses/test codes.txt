@@ -1,0 +1,139 @@
+git checkout -b development
+git add .
+git commit -m "Initial commit on development branch"
+git push -u origin development
+
+
+
+flutter run -d chrome
+
+
+admin@safetyvestpro.com
+12345678
+mAgPmGCuoYb7DUajAMNHnBgRDeW2
+
+pavan@gmail.com
+123456
+61y5QeRtAgQcmnuMhZHlLfheTxV2
+
+
+
+admin@gmail.com
+123
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ESP8266
+    |
+    | writes
+    |
+    ├── sensor
+    ├── gps
+    ├── history
+    └── alerts
+
+Flutter App
+    |
+    | reads only
+    |
+    ├── sensor
+    ├── gps
+    ├── history
+    └── alerts
+
+Web Dashboard
+    |
+    | reads only
+    |
+    ├── sensor
+    ├── gps
+    ├── history
+    └── alerts
+
+
+
+
+
+
+
+ESP8266
+ |
+ |
+ Firebase
+ |
+ |
+ ├── sensor       (real-time dashboard)
+ |
+ ├── gps          (current location)
+ |
+ ├── history      (all sensor records)
+ |
+ └── alerts       (danger events)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<input 
+type="file" 
+id="logoFile">
+
+
+<script>
+
+document
+.getElementById("logoFile")
+.addEventListener(
+"change",
+function(event){
+
+
+const file =
+event.target.files[0];
+
+
+const reader =
+new FileReader();
+
+
+
+reader.onload =
+function(){
+
+
+console.log(reader.result);
+
+
+};
+
+
+reader.readAsDataURL(file);
+
+
+});
+
+</script>
+
+
+
